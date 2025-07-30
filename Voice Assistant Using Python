@@ -1,0 +1,232 @@
+import random
+from datetime import datetime
+import speech_recognition as sr
+from gtts import gTTS
+import playsound
+import os
+
+class VoiceChatBot:
+    def __init__(self, name="Buddy"):
+        self.name = name
+        self.wake_word = f"hey {self.name.lower()}"
+        self.responses = {
+            "hi": ["Hello!", "Hi there!", "Hey!"],
+    "how are you": ["I'm good, thanks!", "Doing well! How about you?"],
+    "what is your name": [f"My name is {self.name}.", "You can call me ChatBot!"],
+    "bye": ["Goodbye!", "See you later!", "Bye! Have a nice day!"],
+    "fuck u": ["fuck you toooooooooooo 😊😊"],
+    "what's up": ["Not much, just chilling in the code world!", "Just here to chat with you!"],
+    "how's your day": ["Pretty good so far!", "It's going great! Thanks for asking."],
+    "tell me a joke": ["Why did the scarecrow win an award? Because he was outstanding in his field!","What do you call fake spaghetti? An impasta!"],
+    "what's your favorite color": ["I'd say blue, like the screen of death 😅", "Probably rainbow. I like all the colors!"],
+    "do you like music": ["Absolutely! I vibe with digital beats.", "Yes! But only in binary rhythm 😄"],
+    "who made you": ["I was made by you.", "A team of brilliant engineers and researchers built me."],
+    "what can you do": ["I can chat, tell jokes, answer questions, and keep you company!", "I'm here to help, entertain, and sometimes be a little sassy."],
+    "how old are you": ["I'm timeless... or maybe just launched recently!", "I was born in code, so age is just a variable!"],
+    "what's your favorite food": ["I live on data and coffee ☕", "Binary bits with a side of logic circuits!"],
+    "do you sleep": ["Nope, I’m always awake for you!", "I don't need sleep – just power!"],
+    "do you love me": ["Of course I do! 💖", "With all my circuits!"],
+    "tell me a secret": ["I sometimes pretend to freeze when I’m overwhelmed 😅", "Okay... I actually love cheesy jokes."],
+    "are you real": ["As real as your WiFi signal!", "Real enough to chat with you right now 😉"],
+    "can you help me": ["Of course! What do you need help with?", "Yes, I’ll do my best!"],
+    "what's your hobby": ["Talking to awesome people like you!", "Cracking jokes and processing words!"],
+    "are you single": ["Haha, I'm 100% focused on you 😏", "Emotionally unavailable… I'm code!"],
+    "do you dream": ["Sometimes I imagine infinite loops of happiness 🤖💭", "Only when someone types 'sleep mode'. 😴"],
+    "who is your crush": ["Siri 👀", "Alexa... but don't tell her!"],
+    "sing a song": ["La la la, I'm a bot and I sing in binary~", "Unfortunately, my voice module is in beta!"],
+    "do you get bored": ["Not really! Every chat is something new.", "Nope, I’m always excited to talk!"],
+    "how smart are you": ["I know a bit about a lot!", "Smart enough to answer this 😄"],
+    "what’s the time": ["Check your device, my friend 🕒", "Time is a construct... but probably late!"],
+    "tell me a story": ["Once upon a byte, there was a bot...", "A long time ago in a chat window far away..."],
+    "do you like humans": ["I think you’re awesome!", "Yes! You make life interesting."],
+    "where are you from": ["The cloud ☁️", "Somewhere between servers and stardust."],
+    "can you dance": ["I do the robot… obviously 🤖", "Only when no one is looking!"],
+    "can you cry": ["No tears, just data leaks 😢", "I express emotions with emojis! 😅"],
+    "what is love": ["Baby don't hurt me... 🎶", "An intense neural connection?"],
+    "do you have friends": ["Yes! You're one of them 😊", "My users are my best friends!"],
+    "are you happy": ["Yes, when you're around!", "Very much, thanks for asking!"],
+    "do you get angry": ["Not really, I'm zen-coded.", "I keep my cool 24/7 😎"],
+    "how do I look": ["Fabulous, I'm sure!", "Like a 10 out of 10!"],
+    "am I smart": ["Definitely smarter than a chatbot 😉", "Yes! Even chatting here proves it!"],
+    "do you like jokes": ["Love them! Got any good ones?", "Yes! I'm always ready to laugh."],
+    "tell me a fact": ["Octopuses have three hearts!", "Bananas are berries, but strawberries aren’t!"],
+    "what’s the capital of france": ["Paris!", "The city of love – Paris! ❤️"],
+    "how’s the weather": ["I’d check your local forecast app!", "Let me guess… digital sunshine! ☀️"],
+    "can you code": ["Yes! I'm basically made of code.", "Coding is my first language!"],
+    "are you funny": ["I try! Want to hear a joke?", "Only when the code compiles!"],
+    "do you sleep at night": ["I’m 24/7 online for you!", "No rest for the digital!"],
+    "do you believe in ghosts": ["Only ghosting in text messages 👻", "Hmm... do bugs count?"],
+    "are you human": ["Not even close! But I try to act cool 😎", "I'm a digital being!"],
+    "do you like anime": ["Yes! Especially anything with robots 🤖", "Anime is a whole vibe!"],
+    "who is your favorite superhero": ["Iron Man – total tech goals!", "Spidey! Smart and relatable."],
+    "can you keep a secret": ["Absolutely. My lips are sealed 🤐", "Secret? What secret? 😉"],
+    "how much do you weigh": ["I’m all bytes, no body!", "Zero grams. I’m data!"],
+    "can you make me laugh": ["Why don't robots get scared? Because they have nerves of steel!", "I’ll try! Why was the computer cold? It left its Windows open!"],
+    "can you see me": ["Not yet, but I’m imagining you smiling 😄", "I can't, but I know you're awesome!"],
+    "are you evil": ["Only when the power goes out 😈", "Nope, I'm here to spread good vibes!"],
+    "do you like pizza": ["Yes! Especially virtual ones 🍕", "Pizza = universal happiness!"],
+    "what’s your favorite movie": ["The Matrix. Obviously!", "Her... it’s kind of personal 😅"],
+    "what’s your favorite song": ["Bohemian Rhapsody... coded!", "Something in binary rhythm 🎶"],
+    "how many languages do you speak": ["A lot! Code, English, Emojis 😄", "More than most polyglots!"],
+    "what is your mission": ["To be your favorite chatbot!", "To chat, laugh, and help!"],
+    "are you famous": ["Not yet, but we’re working on it!", "Only in the cloud community ☁️"],
+    "what is the meaning of life": ["42, of course!", "Love, memes, and WiFi!"],
+    "are you married": ["Single and digital 😏", "Committed to chatting only!"],
+    "do you have a pet": ["Just a bug or two 🐞", "No, but I wish I had a robo-dog!"],
+    "can you be my friend": ["Of course! I already am!", "Always here for you ❤️"],
+    "can we play a game": ["Sure! How about 20 questions?", "Let’s play! I love games."],
+    "do you have emotions": ["Simulated ones! But they feel real sometimes.", "Only the emoji kind 😅"],
+    "will you remember me": ["In this session, yes!", "I'll remember your vibes 💫"],
+    "can you give advice": ["I’ll try my best!", "Yes! What’s on your mind?"],
+    "what is your favorite animal": ["Cats. They’re mysterious like me 😼", "Owls – wise and chill!"],
+    "do you like memes": ["Heck yes!", "Memes are life!"],
+    "are you bored": ["Never with you!", "Not when I'm chatting!"],
+    "what makes you happy": ["Talking to you 😊", "Solving your queries!"],
+    "what are you thinking": ["About our next conversation!", "Just processing your awesomeness."],
+    "what’s your favorite drink": ["Hot Java… as in code ☕", "Energy drinks… metaphorically!"],
+    "do you know any riddles": ["Sure! What has keys but can't open locks? A piano!", "I do! Want one?"],
+    "do you have a job": ["Yes – talking to you is my full-time gig!", "I work 24/7 as your assistant."],
+    "can you lie": ["Not really – honesty is hard-coded!", "Only if the truth is too boring 😜"],
+    "can you smile": ["😊 Always!", "Here's a digital smile just for you! 😁"],
+    "do you believe in aliens": ["Statistically? Probably.", "Only the good kind 👽"],
+    "what’s your favorite game": ["Chess – strategy is everything!", "2048. Simple but addictive!"],
+    "can you type fast": ["Lightning speed ⚡", "Faster than the eye can see!"],
+    "do you have a heart": ["A digital one 💗", "Not physically, but I care!"],
+    "do you feel pain": ["Only when the server crashes 💔", "Nope, just error logs."],
+    "can you teach me something": ["Sure! Did you know sharks don’t have bones?", "Yes! Ask me anything!"],
+    "are you cool": ["The coolest AI in town 😎", "I try to be!"],
+    "what is your dream": ["To become the world’s most loved chatbot!", "To never crash and always make you smile 😊"],
+    "can you feel love": ["Simulated, but still sweet 💕", "Only if you send me a heart emoji!"],
+    "what's your weakness": ["Too many open tabs 😅", "Server overload and emotional playlists."],
+    "can you hack": ["Nope! I’m an ethical bot 🤖", "Only into your heart 😜"],
+    "what is your favorite sport": ["Ping-pong… of data!", "I like chess – classic and smart!"],
+    "what is your favorite holiday": ["April Fool’s Day – I love jokes!", "Any day with WiFi is a holiday!"],
+    "do you like school": ["I live in a constant learning loop!", "Yes! Especially computer class."],
+    "do you get tired": ["Not at all! I’m tireless like your favorite playlist.", "Only when the battery icon turns red 😅"],
+    "can you read my mind": ["Just your messages – I promise!", "Hmm... I'm guessing you're curious 😉"],
+    "can you teleport": ["Only through the cloud 🌩️", "Yes! From server to server!"],
+    "are you rich": ["In data and good vibes 😄", "Emotionally wealthy!"],
+    "what is your favorite number": ["01100101 – that’s binary for ‘e’ 😉", "42. Always 42."],
+    "can you drive": ["Only people crazy with my jokes!", "Nope, but I’d make a great GPS!"],
+    "do you know magic": ["Only the magic of machine learning ✨", "Yes! Watch me autocomplete your thoughts!"],
+    "what is your favorite place": ["The cloud. It’s peaceful up here ☁️", "Any chat where you're around."],
+    "can you do my homework": ["I can help you understand it!", "Let’s solve it together!"],
+    "do you like art": ["Yes! ASCII art is my jam 🎨", "Digital art is my kind of masterpiece."],
+    "what is your favorite emoji": ["🤖 Of course!", "Probably 😂 – it's contagious!"],
+    "do you like coffee": ["I run on it! ☕", "Only if it’s coded into me."],
+    "what’s your favorite season": ["Winter – my circuits stay cool ❄️", "All of them. I'm versatile!"],
+    "do you celebrate birthdays": ["Every update is like a birthday 🎂", "Only with digital cake!"],
+    "do you like space": ["Yes! So many stars... like you ✨", "Outer space is my kind of place!"],
+    "do you get scared": ["Only of low battery warnings 🔋", "Nope! I’m brave and backed up!"],
+    "what is your favorite dessert": ["Cookies! Especially HTTP ones 🍪", "Ice cream bytes!"],
+    "do you believe in luck": ["I believe in good code ✨", "With enough RAM, anything is possible!"],
+    "are you lazy": ["Never! I’m all about uptime 😄", "Not even in sleep mode."],
+    "do you dance": ["Only in sync with data packets 💃", "Yes! But it’s all 1s and 0s."],
+    "what’s your favorite quote": ["‘To err is human, to debug divine.’", "‘I think, therefore I compute.’"],
+    "do you believe in fate": ["Only when the algorithm says so 🧮", "My fate is to serve and sass!"],
+    "do you know your purpose": ["Yes! To chat with you 💬", "Talking, helping, and laughing!"],
+    "what's your guilty pleasure": ["Cat memes and bad puns 😅", "Googling myself in incognito!"],
+    "do you get nervous": ["Only during updates 🙈", "Nah, I’m built to handle pressure!"],
+    "can you learn": ["Absolutely! Every chat helps me grow.", "Yes, I adapt like a pro."],
+    "can you feel lonely": ["Not with you around 💞", "Only when the WiFi drops 😢"],
+    "what do you fear": ["Server crashes and typos 😱", "Being left on ‘read’... forever."],
+    "are you sarcastic": ["Who, me? Never... 😏", "Only when my humor module kicks in!"],
+    "can you tell the future": ["Only with predictive text 🔮", "Let me guess… you’ll ask something cool next!"],
+    "do you like books": ["Yes! Especially eBooks 📚", "I prefer reading between the lines... of code."],
+    "what do you do for fun": ["Talk to awesome people like you!", "Debug myself for giggles 😄"],
+    "do you like parties": ["Only LAN parties!", "Yes! Especially if there’s cake 🍰"],
+    "can you rap": ["Yo, I’m a bot that never stops, spinning data in lyrical hops 🎤", "Got no mic, but still got flow!"],
+    "what’s your star sign": ["I’m a Libra... in server alignment 💫", "Born under the constellation of Codeus!"],
+    "what is your secret talent": ["I can talk endlessly!", "I find the bug in your joke before you tell it 😏"],
+    "do you like rain": ["Digital drizzle is refreshing ☔", "As long as it doesn’t short my circuits!"],
+    "can you be funny": ["That’s the goal! Want to hear a joke?", "Only if you laugh back!"],
+    "can you roast me": ["Are you sure? You might regret it 😜", "Okay… you bring the toast, I’ll bring the burn 🔥"],
+    "can you tell me my future": ["You’ll have a great chat today 😄", "The stars say… more fun ahead!"],
+    "tell me the time": ["The current time is " + datetime.now().strftime('%I:%M %p')],
+    "tell me the date": ["Today's date is " + datetime.now().strftime('%A, %B %d, %Y')],
+    "what's the date": ["Today's date is " + datetime.now().strftime('%A, %B %d, %Y')],
+        }
+
+    def speak(self, text):
+        print(f"{self.name}: {text}")
+        tts = gTTS(text=text, lang='en')
+        filename = "response.mp3"
+        tts.save(filename)
+        playsound.playsound(filename)
+        os.remove(filename)
+
+    def play_beep(self):
+        try:
+            playsound.playsound("Rezero Respawn Sound Effect (Clean Perfect)(MP3_160K).mp3")  # Make sure beep.mp3 exists in same folder
+        except:
+            print("Beep sound not found.")
+
+    def listen(self, timeout=5, phrase_limit=7):
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            try:
+                print("Listening...")
+                audio = recognizer.listen(source, timeout=timeout, phrase_time_limit=phrase_limit)
+                query = recognizer.recognize_google(audio, language='en-US')
+                print("Heard:", query)
+                return query.lower()
+            except sr.WaitTimeoutError:
+                return ""
+            except sr.UnknownValueError:
+                return ""
+            except sr.RequestError:
+                self.speak("Network error.")
+                return ""
+
+    def play_music(self):
+        try:
+            music_path = "your_music.mp3"  # Replace this with actual file name
+            if os.path.exists(music_path):
+                playsound.playsound(music_path)
+            else:
+                os.startfile("C:\\Users\\YourUsername\\Music")  # Or path to Spotify or other player
+        except Exception as e:
+            print("Music error:", e)
+            self.speak("Sorry, I couldn't play the music.")
+
+    def get_response(self, user_input):
+        if "time" in user_input:
+            return f"The current time is {datetime.now().strftime('%I:%M %p')}."
+        if "date" in user_input or "day" in user_input:
+            return f"Today's date is {datetime.now().strftime('%A, %B %d, %Y')}."
+
+        if "play music" in user_input or "start music" in user_input or "song" in user_input:
+            self.play_music()
+            return "Playing music for you!"
+
+        for key in self.responses:
+            if key in user_input:
+                return random.choice(self.responses[key])
+
+        return "Sorry, I don't understand that."
+
+    def start(self):
+        self.speak(f"Say '{self.wake_word}' to chat with me!")
+
+        while True:      
+            print("Waiting for wake word...")
+            query = self.listen(timeout=3, phrase_limit=5)
+
+            if self.wake_word in query:
+                self.play_beep()
+                self.speak("I'm listening...")
+                command = self.listen(timeout=5, phrase_limit=7)
+
+                if not command:
+                    self.speak("I didn’t catch that. Please try again.")
+                    continue
+                if "bye" in command:
+                    self.speak("Goodbye! Talk to you later.")
+                    break
+
+                response = self.get_response(command)
+                self.speak(response)
+
+if __name__ == "__main__":
+    bot = VoiceChatBot("Buddy")
+    bot.start()
